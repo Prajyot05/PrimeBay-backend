@@ -63,6 +63,8 @@ export const newOrder = TryCatch(async(req:Request<{}, {}, NewOrderRequestBody>,
 
     if(!shippingInfo || !orderItems || !user || !subTotal || !tax || !total) return next(new ErrorHandler("Please Enter All Fields", 400));
 
+    console.log(orderItems);
+
     const order = await Order.create({
         shippingInfo, 
         orderItems, 

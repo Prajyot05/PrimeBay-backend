@@ -9,10 +9,16 @@ const schema = new mongoose.Schema({
         type: String,
         required: [true, "Please enter Name"]
     },
-    photo: {
-        type: String,
-        required: [true, "Please add Photo"]
-    },
+    photos: [{
+        public_id: {
+            type: String,
+            required: [true, "Please enter Public ID"]
+        },
+        url: {
+            type: String,
+            required: [true, "Please enter URL"]
+        }
+    }],
     price: {
         type: Number,
         required: [true, "Please add Price"]
@@ -26,6 +32,18 @@ const schema = new mongoose.Schema({
         required: [true, "Please enter Product Category"],
         trim: true
     },
+    description: {
+        type: String,
+        required: [true, "Please enter Description"]
+    },
+    ratings: {
+        type: Number,
+        default: 0
+    },
+    numberOfReviews: {
+        type: Number,
+        default: 0
+    }
 }, {timestamps: true});
 
 export const Product = mongoose.model("Product", schema);

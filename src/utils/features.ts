@@ -3,6 +3,48 @@ import { InvalidateCacheProps, OrderItemType } from "../types/types.js";
 import { myCache } from "../app.js";
 import { Product } from "../models/product.model.js";
 import { Order } from "../models/order.model.js";
+import {UploadApiResponse, v2 as cloudinary} from 'cloudinary';
+import { Review } from "../models/review.model.js";
+
+const getBase64 = (file: Express.Multer.File) => (
+    `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
+);
+
+export const uploadToCloudinary = async (files: Express.Multer.File[]) => {
+    // const promises = [];
+    // for(let i = 0; i < files.length; i++){
+    //     promises.push(cloudinary.uploader.upload(getBase64(files[i])));
+    // }
+    // return await Promise.all(promises);
+    
+    const promises = files.map(async (file) => {
+        return new Promise<UploadApiResponse>((resolve, reject) => {
+            cloudinary.uploader.upload(getBase64(file), (error, result) => {
+                if(error) return reject(error);
+                resolve(result!);
+            });
+        });
+    });
+
+    const result = await Promise.all(promises);
+
+    return result.map((i) => ({
+        public_id: i.public_id,
+        url: i.url
+    }));
+};
+
+export const deleteFromCloudinary = async (publicIds: string[]) => {
+    const promises = publicIds.map((id) => {
+        return new Promise<void>((resolve, reject) => {
+            cloudinary.uploader.destroy(id, (error, result) => {
+                if(error) return reject(error);
+                resolve();
+            });
+        });
+    });
+    await Promise.all(promises);
+};
 
 export const connectDB = (uri: string) => {
     mongoose.connect(uri, {
@@ -40,7 +82,7 @@ export const invalidateCache = async ({product, order, admin, userID, orderID, p
 export const reduceStock = async (orderItems: OrderItemType[]) => {
     for(let i = 0; i < orderItems.length; i++){
         const order = orderItems[i];
-        const product = await Product.findById(order.productID);
+        const product = await Product.findById(order.productId);
         if(!product) throw new Error("Product Not Found");
         product.stock -= order.quantity;
         await product.save();
@@ -51,6 +93,22 @@ export const calculatePercentage = (thisMonth: number, lastMonth: number) => {
     if(lastMonth === 0) return thisMonth * 100;
     const percent = (thisMonth / lastMonth) * 100
     return Number(percent.toFixed(0));
+};
+
+export const findAverageRatings = async (productId: mongoose.Types.ObjectId) => {
+    let totalRating = 0;
+
+    const reviews = await Review.find({product: productId});
+    reviews.forEach((review) => {
+        totalRating += review.rating;
+    });
+
+    const averageRating = Math.floor(totalRating / reviews.length) || 0;
+    
+    return {
+        ratings: averageRating,
+        numberOfReviews: reviews.length
+    }
 };
 
 export const getInventories = async ({categories, productsCount} : {categories : string[]; productsCount: number}) => {

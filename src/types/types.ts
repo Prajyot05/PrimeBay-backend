@@ -12,6 +12,7 @@ export interface NewUserRequestBody {
 export interface NewProductRequestBody {
     name: string;
     category: string;
+    description: string;
     price: number;
     stock: number;
 }
@@ -55,7 +56,7 @@ export type OrderItemType = {
     photo: string;
     price: number;
     quantity: number;
-    productID: string;
+    productId: string;
 }
 
 export type ShippingInfoType = {
