@@ -7,6 +7,7 @@ import morgan from 'morgan';
 import Stripe from 'stripe';
 import cors from 'cors';
 import {v2 as cloudinary} from 'cloudinary';
+import {Cashfree} from 'cashfree-pg';
 
 // Importing Routes
 import userRoute from './routes/user.route.js';
@@ -19,6 +20,7 @@ config({
     path: "./.env"
 })
 
+// Basic variables confid
 const port = process.env.PORT || 3000;
 const mongoURI = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
@@ -26,17 +28,25 @@ const clientURL = process.env.CLIENT_URL || "";
 
 connectDB(mongoURI);
 
+// Cloudinary config
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUD_API_KEY,
     api_secret: process.env.CLOUD_API_SECRET,
 });
 
+// Cashfree config
+Cashfree.XClientId = process.env.CASHFREE_APP_ID;
+Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
+Cashfree.XEnvironment = Cashfree.Environment.SANDBOX;
+Cashfree.XEnableErrorAnalytics = false;
+
 export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 app.use(morgan("dev"));
 
 app.use(cors({

@@ -4,7 +4,9 @@ import { Coupon } from "../models/coupon.model.js";
 import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
 import { OrderItemType, ShippingInfoType } from "../types/types.js";
+import { generateOrderId } from "../utils/features.js";
 import ErrorHandler from "../utils/utility-class.js";
+import {Cashfree} from 'cashfree-pg';
 
 // export const createPaymentIntent = TryCatch(async(req, res, next) => {
 //     const {amount} = req.body;
@@ -186,4 +188,68 @@ export const deleteCoupon = TryCatch(async(req, res, next) => {
         success: true,
         message: `Coupon ${coupon?.code} Deleted Successfully`
     })
+});
+
+export const getSessionId = TryCatch(async(req, res, next) => {
+  const {
+    shippingInfo,
+    orderItems,
+    subTotal,
+    tax,
+    discount,
+    shippingCharges,
+    total,
+    user
+  } = req.body;
+
+  const request = {
+    order_amount: total,
+    order_currency: "INR",
+    order_id: await generateOrderId(),
+    customer_details: {
+      customer_id: user._id,
+      customer_phone: "+919420902892",
+      customer_name: user.name,
+      customer_email: user.email,
+    },
+    shipping_address: shippingInfo,
+    order_notes: {
+      items: JSON.stringify(orderItems),
+      sub_total: subTotal,
+      tax: tax,
+      discount: discount,
+      shipping_charges: shippingCharges,
+    },
+  };
+
+  Cashfree.PGCreateOrder("2023-08-01", request).then(response => {
+    res.json(response.data);
+  }).catch(error => {
+      console.error(error.response.data.message);
+  })
+});
+
+export const verifyCashfreePayment = TryCatch(async(req, res, next) => {
+  const { orderId } = req.body;
+
+  Cashfree.PGOrderFetchPayments("2023-08-01", orderId).then((response) => {
+    res.json(response.data);
+  }).catch(error => {
+    console.log('Cashfree Verify Error: ', error);
+  });
+  // const paymentStatus = response.data;
+
+  // if (paymentStatus.filter(transaction => transaction.payment_status === "SUCCESS").length > 0) {
+  //   orderStatus = "Success";
+  // } else if (paymentStatus.filter(transaction => transaction.payment_status === "PENDING").length > 0) {
+  //   orderStatus = "Pending";
+  // } else {
+  //   orderStatus = "Failure";
+  // }
+
+  // if (orderStatus === 'Success') {
+  //   res.json({ success: true, message: 'Payment successful', data: paymentStatus });
+  // } else {
+  //   res.json({ success: false, message: 'Payment failed or still processing', data: paymentStatus });
+  // }
 });

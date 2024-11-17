@@ -5,6 +5,7 @@ import { Product } from "../models/product.model.js";
 import { Order } from "../models/order.model.js";
 import {UploadApiResponse, v2 as cloudinary} from 'cloudinary';
 import { Review } from "../models/review.model.js";
+import crypto from 'crypto';
 
 const getBase64 = (file: Express.Multer.File) => (
     `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
@@ -149,3 +150,14 @@ export const getCharData = ({length, docArr, today, property}: {length: number, 
 
     return data;
 }
+
+export const generateOrderId = () => {
+    const uniqueId = crypto.randomBytes(16).toString('hex');
+  
+    const hash = crypto.createHash('sha256');
+    hash.update(uniqueId);
+  
+    const orderId = hash.digest('hex');
+  
+    return orderId.substr(0, 12);
+  }
