@@ -1,6 +1,8 @@
 import express from 'express';
 import { connectDB } from './utils/features.js';
 import { errorMiddleware } from './middlewares/error.js';
+import { createServer } from 'http'; // Import to create HTTP server
+import { Server } from 'socket.io'; // Import Socket.IO
 import NodeCache from 'node-cache';
 import {config} from 'dotenv';
 import morgan from 'morgan';
@@ -49,7 +51,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(morgan("dev"));
 
-app.use(cors({
+app.use(
+    cors({
     origin: [clientURL],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
@@ -69,4 +72,31 @@ app.use("/api/v1/dashboard", dashboardRoute);
 app.use("/uploads", express.static("uploads")); // Whenever I go to /uploads/anything route, it opens image from 'uploads' folder
 app.use(errorMiddleware);
 
-app.listen(port, () => {console.log(`Server is working on localhost:${port}`)})
+// Create HTTP server and attach Socket.IO
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: clientURL,
+        methods: ['GET', 'POST'],
+    },
+});
+
+// Attach Socket.IO to the request object for use in routes
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
+// Handle Socket.IO events
+io.on('connection', (socket) => {
+    console.log('Admin connected:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('Admin disconnected');
+    });
+});
+
+// Listen on the same port
+server.listen(port, () => {
+    console.log(`Server is working on localhost:${port}`);
+});

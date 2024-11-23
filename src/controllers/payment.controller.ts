@@ -229,27 +229,58 @@ export const getSessionId = TryCatch(async(req, res, next) => {
   })
 });
 
-export const verifyCashfreePayment = TryCatch(async(req, res, next) => {
+export const verifyCashfreePayment = TryCatch(async (req, res, next) => {
   const { orderId } = req.body;
 
-  Cashfree.PGOrderFetchPayments("2023-08-01", orderId).then((response) => {
-    res.json(response.data);
-  }).catch(error => {
-    console.log('Cashfree Verify Error: ', error);
-  });
-  // const paymentStatus = response.data;
+  Cashfree.PGOrderFetchPayments("2023-08-01", orderId)
+      .then((response) => {
+          const paymentStatus = response.data;
 
-  // if (paymentStatus.filter(transaction => transaction.payment_status === "SUCCESS").length > 0) {
-  //   orderStatus = "Success";
-  // } else if (paymentStatus.filter(transaction => transaction.payment_status === "PENDING").length > 0) {
-  //   orderStatus = "Pending";
-  // } else {
-  //   orderStatus = "Failure";
-  // }
+          // Emit a success event if payment is successful
+          if (paymentStatus.some((transaction) => transaction.payment_status === "SUCCESS")) {
+            if (req.io) {
+              req.io.emit("transaction_completed", {
+                  orderId,
+                  status: "SUCCESS",
+                  timestamp: new Date().toISOString(),
+              });
+            }          
 
-  // if (orderStatus === 'Success') {
-  //   res.json({ success: true, message: 'Payment successful', data: paymentStatus });
-  // } else {
-  //   res.json({ success: false, message: 'Payment failed or still processing', data: paymentStatus });
-  // }
+            return res.json({
+                success: true,
+                message: "Payment successful",
+                data: paymentStatus,
+            });
+          }
+
+          // Handle other payment statuses
+          if (req.io) {
+            req.io.emit("transaction_failed", {
+                orderId,
+                status: "FAILED",
+                timestamp: new Date().toISOString(),
+            });
+          }
+
+          return res.json({
+              success: false,
+              message: "Payment failed or still processing",
+              data: paymentStatus,
+          });
+      })
+      .catch((error) => {
+          console.error("Cashfree Verify Error: ", error);
+
+          // Emit an error event for payment failure
+          if (req.io) {
+            req.io.emit("transaction_failed", {
+                orderId,
+                status: "ERROR",
+                error: error.message,
+                timestamp: new Date().toISOString(),
+            });
+          }
+
+          next(new ErrorHandler("Payment verification failed", 500));
+      });
 });
