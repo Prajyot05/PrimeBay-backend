@@ -34,9 +34,12 @@ export const allOrders = TryCatch(async(req, res, next) => {
         myCache.set(key, JSON.stringify(orders));
     }
 
+    // Reverse the array to get the most recent order firsts
+    const reversedOrders = [...orders].reverse();
+
     return res.status(200).json({
         success: true,
-        orders
+        orders: reversedOrders
     })
 });
 
