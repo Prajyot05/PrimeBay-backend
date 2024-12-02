@@ -235,8 +235,8 @@ export const getSessionId = TryCatch(async(req, res, next) => {
 export const verifyCashfreePayment = TryCatch(async (req, res, next) => {
   const { orderId } = req.body;
 
-  Cashfree.PGOrderFetchPayments("2024-12-02", orderId)
-  // Cashfree.PGOrderFetchPayments("2023-08-01", orderId)
+  // Cashfree.PGOrderFetchPayments("2024-12-02", orderId)
+  Cashfree.PGOrderFetchPayments("2023-08-01", orderId)
       .then((response) => {
           const paymentStatus = response.data;
 
