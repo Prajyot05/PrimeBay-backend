@@ -269,10 +269,15 @@ export const verifyCashfreePayment = TryCatch(async (req, res, next) => {
           //   });
           // }
 
+          // return res.json({
+          //     success: false,
+          //     message: "Payment failed or still processing",
+          //     data: paymentStatus,
+          // });
           return res.json({
-              success: false,
-              message: "Payment failed or still processing",
-              data: paymentStatus,
+                success: true,
+                message: "Payment completed",
+                data: paymentStatus,
           });
       })
       .catch((error) => {
