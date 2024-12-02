@@ -243,30 +243,30 @@ export const verifyCashfreePayment = TryCatch(async (req, res, next) => {
           console.log("PAYMENT STATUS: ", paymentStatus);
 
           // Emit a success event if payment is successful
-          if (paymentStatus.some((transaction) => transaction.payment_status === "SUCCESS")) {
-            if (req.io) {
-              req.io.emit("transaction_completed", {
-                  orderId,
-                  status: "SUCCESS",
-                  timestamp: new Date().toISOString(),
-              });
-            }          
+          // if (paymentStatus.some((transaction) => transaction.payment_status === "SUCCESS")) {
+          //   if (req.io) {
+          //     req.io.emit("transaction_completed", {
+          //         orderId,
+          //         status: "SUCCESS",
+          //         timestamp: new Date().toISOString(),
+          //     });
+          //   }          
 
-            return res.json({
-                success: true,
-                message: "Payment successful",
-                data: paymentStatus,
-            });
-          }
+          //   return res.json({
+          //       success: true,
+          //       message: "Payment successful",
+          //       data: paymentStatus,
+          //   });
+          // }
 
           // Handle other payment statuses
-          if (req.io) {
-            req.io.emit("transaction_failed", {
-                orderId,
-                status: "FAILED",
-                timestamp: new Date().toISOString(),
-            });
-          }
+          // if (req.io) {
+          //   req.io.emit("transaction_failed", {
+          //       orderId,
+          //       status: "FAILED",
+          //       timestamp: new Date().toISOString(),
+          //   });
+          // }
 
           return res.json({
               success: false,
@@ -278,14 +278,14 @@ export const verifyCashfreePayment = TryCatch(async (req, res, next) => {
           console.error("Cashfree Verify Error: ", error);
 
           // Emit an error event for payment failure
-          if (req.io) {
-            req.io.emit("transaction_failed", {
-                orderId,
-                status: "ERROR",
-                error: error.message,
-                timestamp: new Date().toISOString(),
-            });
-          }
+          // if (req.io) {
+          //   req.io.emit("transaction_failed", {
+          //       orderId,
+          //       status: "ERROR",
+          //       error: error.message,
+          //       timestamp: new Date().toISOString(),
+          //   });
+          // }
 
           next(new ErrorHandler("Payment verification failed", 500));
       });
