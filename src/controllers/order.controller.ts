@@ -66,7 +66,7 @@ export const newOrder = TryCatch(async(req:Request<{}, {}, NewOrderRequestBody>,
 
     console.log("REQ BODY IN NEW ORDER: ", req.body);
 
-    if(!shippingInfo || !orderItems || !user || !subTotal || !tax || !total) return next(new ErrorHandler("Please Enter All Fields", 400));
+    if(!shippingInfo || !orderItems || !user || !subTotal || !total) return next(new ErrorHandler("Please Enter All Fields", 400));
 
     console.log('ORDER ITEMS IN NEW ORDER: ', orderItems);
 
