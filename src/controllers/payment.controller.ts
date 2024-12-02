@@ -191,6 +191,7 @@ export const deleteCoupon = TryCatch(async(req, res, next) => {
 });
 
 export const getSessionId = TryCatch(async(req, res, next) => {
+  console.log('here');
   const {
     shippingInfo,
     orderItems,
@@ -219,8 +220,10 @@ export const getSessionId = TryCatch(async(req, res, next) => {
       tax: tax,
       discount: discount,
       shipping_charges: shippingCharges,
-    },
+    }
   };
+
+  console.log('request', request);
 
   Cashfree.PGCreateOrder("2023-08-01", request).then(response => {
     res.json(response.data);

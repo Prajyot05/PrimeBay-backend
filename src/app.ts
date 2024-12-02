@@ -40,7 +40,7 @@ cloudinary.config({
 // Cashfree config
 Cashfree.XClientId = process.env.CASHFREE_APP_ID;
 Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
-Cashfree.XEnvironment = Cashfree.Environment.SANDBOX;
+Cashfree.XEnvironment = Cashfree.Environment.PRODUCTION;
 Cashfree.XEnableErrorAnalytics = false;
 
 export const stripe = new Stripe(stripeKey);
