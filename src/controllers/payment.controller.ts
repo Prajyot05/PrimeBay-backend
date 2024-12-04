@@ -72,7 +72,7 @@ export const createPaymentIntent = TryCatch(async (req, res, next) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: total * 100,
       currency: "inr",
-      description: "PrimeBay",
+      description: "H2Canteen", //Primebay tha yaha pehle
       shipping: {
         name: user.name,
         address: {
