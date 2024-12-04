@@ -60,6 +60,7 @@ export type OrderItemType = {
 }
 
 export type ShippingInfoType = {
+    phone: number;
     address: string;
     city: string;
     state: string;

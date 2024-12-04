@@ -75,6 +75,7 @@ export const createPaymentIntent = TryCatch(async (req, res, next) => {
       description: "H2Canteen", //Primebay tha yaha pehle
       shipping: {
         name: user.name,
+        phone: shippingInfo.phone.toString(),
         address: {
           line1: shippingInfo.address,
           postal_code: shippingInfo.pinCode.toString(),
