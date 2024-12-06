@@ -1,7 +1,8 @@
 import express from 'express';
 import { connectDB } from './utils/features.js';
 import { errorMiddleware } from './middlewares/error.js';
-import { createServer } from 'http'; // Import to create HTTP server
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import NodeCache from 'node-cache';
 import {config} from 'dotenv';
 import morgan from 'morgan';
@@ -15,7 +16,7 @@ import userRoute from './routes/user.route.js';
 import productRoute from './routes/products.route.js';
 import orderRoute from './routes/orders.route.js';
 import paymentRoute from './routes/payment.route.js';
-import dashboardRoute from './routes/stats.route.js';
+import adminRoute from './routes/admins.route.js';
 
 config({
     path: "./.env"
@@ -53,7 +54,7 @@ app.use(morgan("dev"));
 app.use(
     cors({
     origin: [clientURL],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true
 }));
 
@@ -61,18 +62,53 @@ app.get("/", (req, res) => {
     res.send("API is Working with /api/v1");
 })
 
+// Create HTTP server for Express and Socket.IO
+const server = createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+    cors: {
+        origin: clientURL,
+        methods: ["GET", "PATCH"]
+    }
+});
+
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
 // Using Routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", paymentRoute);
-app.use("/api/v1/dashboard", dashboardRoute);
+app.use("/api/v1/dashboard", adminRoute);
 
 app.use("/uploads", express.static("uploads")); // Whenever I go to /uploads/anything route, it opens image from 'uploads' folder
 app.use(errorMiddleware);
 
+let globalOrderStatus = true; // Default value
 
-// Listen on the same port
-app.listen(port, () => {
-    console.log(`Server is working on localhost:${port}`);
+io.on("connection", (socket) => {
+    console.log("New client connected");
+
+    // Send the current order status to the newly connected client
+    socket.emit("orderStatusUpdate", globalOrderStatus);
+
+    // Listen for admin updates to order status
+    socket.on("updateOrderStatus", (newStatus) => {
+        globalOrderStatus = newStatus;
+
+        // Broadcast the new status to all connected clients
+        io.emit("orderStatusUpdate", globalOrderStatus);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Client disconnected");
+    });
+});
+
+server.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });

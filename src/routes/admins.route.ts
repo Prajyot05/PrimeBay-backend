@@ -1,6 +1,6 @@
 import express from 'express';
 import { adminOnly } from '../middlewares/auth.js';
-import { getBarChart, getDashboardStats, getLineChart, getPieChart } from '../controllers/stats.controller.js';
+import { getBarChart, getDashboardStats, getLineChart, getOrderStatus, getPieChart, updateOrderStatus } from '../controllers/admin.controller.js';
 
 const app = express.Router();
 
@@ -9,5 +9,8 @@ app.get("/stats", adminOnly, getDashboardStats);
 app.get("/pie", adminOnly, getPieChart);
 app.get("/bar", adminOnly, getBarChart);
 app.get("/line", adminOnly, getLineChart);
+
+app.get("/orderStatus/:id", adminOnly, getOrderStatus);
+app.patch("/orderStatus", adminOnly, updateOrderStatus);
 
 export default app;

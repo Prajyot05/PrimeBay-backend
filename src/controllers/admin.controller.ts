@@ -1,5 +1,6 @@
 import { myCache } from "../app.js";
 import { TryCatch } from "../middlewares/error.js";
+import { Admin } from "../models/admin.model.js";
 import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
@@ -361,5 +362,47 @@ export const getLineChart = TryCatch(async(req, res, next) => {
     res.status(200).json({
         success: true,
         charts
+    });
+});
+
+export const getOrderStatus = TryCatch(async(req, res, next) => {
+    const {id} = req.query;
+    if (!id) {
+        throw new Error("User ID is required.");
+    }
+
+    let orderStatusInfo = await Admin.findOne({ userId: id });
+
+    if (!orderStatusInfo){
+        console.log('Creating new Entry in Admin Table...');
+        orderStatusInfo = await Admin.create({ userId: id });
+    }
+
+    res.status(200).json({
+        success: true,
+        orderStatusInfo,
+    });
+});
+
+export const updateOrderStatus = TryCatch(async(req, res, next) => {
+    const { id, isEnabled: orderStatus } = req.body;
+
+    const updatedAdmin = await Admin.findOneAndUpdate(
+        { userId: id },
+        { orderStatus },
+        { new: true, upsert: true }
+    );
+
+    // Emit the updated order status to all connected clients
+    if (req.io){
+        req.io.emit("orderStatusUpdate", updatedAdmin.orderStatus);
+    } else {
+        console.log("Socket.IO instance not attached to request.");
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "Order status updated",
+        orderStatus: updatedAdmin.orderStatus
     });
 });
