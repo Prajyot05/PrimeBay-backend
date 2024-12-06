@@ -210,7 +210,7 @@ export const getSessionId = TryCatch(async(req, res, next) => {
     order_id: await generateOrderId(),
     customer_details: {
       customer_id: user._id,
-      customer_phone: "+919420902892",
+      customer_phone: shippingInfo.phone,
       customer_name: user.name,
       customer_email: user.email,
     },
