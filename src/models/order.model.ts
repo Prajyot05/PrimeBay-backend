@@ -21,6 +21,10 @@ const schema = new mongoose.Schema({
         pinCode:{
             type: Number,
             required: [true, "Please enter Pin Code"]
+        },
+        phone:{
+            type:Number,
+            required:[true, "Please enter Mobile Number"]
         }
     },
 
