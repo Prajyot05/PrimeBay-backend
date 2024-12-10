@@ -4,7 +4,7 @@ import { Admin } from "../models/admin.model.js";
 import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
-import { calculatePercentage, getCharData, getInventories } from "../utils/features.js";
+import { calculatePercentage, getCharData, getInventories, getOrCreateOrderStatus } from "../utils/features.js";
 
 export const getDashboardStats = TryCatch(async(req, res, next) => {
     let stats = {};
@@ -367,20 +367,20 @@ export const getLineChart = TryCatch(async(req, res, next) => {
 
 export const getOrderStatus = TryCatch(async(req, res, next) => {
     const {id} = req.query;
-    if (!id) {
-        throw new Error("User ID is required.");
-    }
+    const tempId1 = "EYWbhGJsw2VranumeCuzcK8TOPE2";
+    const orderStatusInfo1 = await getOrCreateOrderStatus(tempId1);
+    const tempId2 = "KchqAhyr72bJNEPXSuRUWhsOgR22";
+    const orderStatusInfo2 = await getOrCreateOrderStatus(tempId2);
+    const tempId3 = "Pd6zWGkSjLTh8IpOobO35dbA2IJ2";
+    const orderStatusInfo3 = await getOrCreateOrderStatus(tempId3);
+    const tempId4 = "Fs7NfKSvp8XV6qhFLQ6WyjfOwLv1";
+    const orderStatusInfo4 = await getOrCreateOrderStatus(tempId4);
 
-    let orderStatusInfo = await Admin.findOne({ userId: id });
-
-    if (!orderStatusInfo){
-        console.log('Creating new Entry in Admin Table...');
-        orderStatusInfo = await Admin.create({ userId: id });
-    }
+    const finalValue = orderStatusInfo1.orderStatus && orderStatusInfo2.orderStatus && orderStatusInfo3.orderStatus && orderStatusInfo4.orderStatus;
 
     res.status(200).json({
         success: true,
-        orderStatusInfo,
+        orderStatusInfo: finalValue
     });
 });
 

@@ -6,6 +6,7 @@ import { Order } from "../models/order.model.js";
 import {UploadApiResponse, v2 as cloudinary} from 'cloudinary';
 import { Review } from "../models/review.model.js";
 import crypto from 'crypto';
+import { Admin } from "../models/admin.model.js";
 
 const getBase64 = (file: Express.Multer.File) => (
     `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
@@ -160,4 +161,18 @@ export const generateOrderId = () => {
     const orderId = hash.digest('hex');
   
     return orderId.substr(0, 12);
-  }
+}
+
+export const getOrCreateOrderStatus = async (userId: string) => {
+    if (!userId) {
+        throw new Error("User ID is required.");
+    }
+
+    let orderStatusInfo = await Admin.findOne({ userId });
+    if (!orderStatusInfo) {
+        console.log('Creating new Entry in Admin Table...');
+        orderStatusInfo = await Admin.create({ userId });
+    }
+
+    return orderStatusInfo;
+};

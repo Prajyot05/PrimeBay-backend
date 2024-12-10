@@ -1,5 +1,5 @@
 import express from 'express';
-import { connectDB } from './utils/features.js';
+import { connectDB, getOrCreateOrderStatus } from './utils/features.js';
 import { errorMiddleware } from './middlewares/error.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -88,13 +88,28 @@ app.use("/api/v1/dashboard", adminRoute);
 app.use("/uploads", express.static("uploads")); // Whenever I go to /uploads/anything route, it opens image from 'uploads' folder
 app.use(errorMiddleware);
 
-let globalOrderStatus = true; // Default value
+let globalOrderStatus = true;
+const userId = "EYWbhGJsw2VranumeCuzcK8TOPE2";
+
+const fetchOrderStatusForUser = async (userId: string) => {
+    try {
+        const orderStatusInfo = await getOrCreateOrderStatus(userId);
+        console.log("Fetched Order Status:", orderStatusInfo);
+        globalOrderStatus = orderStatusInfo.orderStatus;
+    } catch (error) {
+        console.error("Error fetching order status:", error);
+        return null;
+    }
+};
+
+fetchOrderStatusForUser(userId);
 
 io.on("connection", (socket) => {
     console.log("New client connected");
 
     // Send the current order status to the newly connected client
     socket.emit("orderStatusUpdate", globalOrderStatus);
+    console.log('ORDER STATUS: ', globalOrderStatus);
 
     // Listen for admin updates to order status
     socket.on("updateOrderStatus", (newStatus) => {
