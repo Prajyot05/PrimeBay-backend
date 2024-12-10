@@ -366,7 +366,6 @@ export const getLineChart = TryCatch(async(req, res, next) => {
 });
 
 export const getOrderStatus = TryCatch(async(req, res, next) => {
-    const {id} = req.query;
     const tempId1 = "EYWbhGJsw2VranumeCuzcK8TOPE2";
     const orderStatusInfo1 = await getOrCreateOrderStatus(tempId1);
     const tempId2 = "KchqAhyr72bJNEPXSuRUWhsOgR22";
@@ -377,6 +376,7 @@ export const getOrderStatus = TryCatch(async(req, res, next) => {
     const orderStatusInfo4 = await getOrCreateOrderStatus(tempId4);
 
     const finalValue = orderStatusInfo1.orderStatus && orderStatusInfo2.orderStatus && orderStatusInfo3.orderStatus && orderStatusInfo4.orderStatus;
+    console.log("Final Value: ", finalValue);
 
     res.status(200).json({
         success: true,
@@ -388,7 +388,7 @@ export const updateOrderStatus = TryCatch(async(req, res, next) => {
     const { id, isEnabled: orderStatus } = req.body;
 
     const updatedAdmin = await Admin.findOneAndUpdate(
-        { userId: id },
+        { userId: "EYWbhGJsw2VranumeCuzcK8TOPE2" },
         { orderStatus },
         { new: true, upsert: true }
     );

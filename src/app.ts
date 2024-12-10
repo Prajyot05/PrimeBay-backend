@@ -93,18 +93,29 @@ const userId = "EYWbhGJsw2VranumeCuzcK8TOPE2";
 
 const fetchOrderStatusForUser = async (userId: string) => {
     try {
-        const orderStatusInfo = await getOrCreateOrderStatus(userId);
-        console.log("Fetched Order Status:", orderStatusInfo);
-        globalOrderStatus = orderStatusInfo.orderStatus;
+        // const orderStatusInfo = await getOrCreateOrderStatus(userId);
+        // globalOrderStatus = orderStatusInfo.orderStatus;
+        const tempId1 = "EYWbhGJsw2VranumeCuzcK8TOPE2";
+        const orderStatusInfo1 = await getOrCreateOrderStatus(tempId1);
+        const tempId2 = "KchqAhyr72bJNEPXSuRUWhsOgR22";
+        const orderStatusInfo2 = await getOrCreateOrderStatus(tempId2);
+        const tempId3 = "Pd6zWGkSjLTh8IpOobO35dbA2IJ2";
+        const orderStatusInfo3 = await getOrCreateOrderStatus(tempId3);
+        const tempId4 = "Fs7NfKSvp8XV6qhFLQ6WyjfOwLv1";
+        const orderStatusInfo4 = await getOrCreateOrderStatus(tempId4);
+
+        const finalValue = orderStatusInfo1.orderStatus && orderStatusInfo2.orderStatus && orderStatusInfo3.orderStatus && orderStatusInfo4.orderStatus;
+        console.log("Initial Value: ", finalValue);
+        
+        globalOrderStatus = finalValue;
     } catch (error) {
-        console.error("Error fetching order status:", error);
+        console.error("Error fetching initial store status:", error);
         return null;
     }
 };
 
-fetchOrderStatusForUser(userId);
-
 io.on("connection", (socket) => {
+    fetchOrderStatusForUser(userId);
     console.log("New client connected");
 
     // Send the current order status to the newly connected client
