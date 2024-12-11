@@ -387,8 +387,10 @@ export const getOrderStatus = TryCatch(async(req, res, next) => {
 export const updateOrderStatus = TryCatch(async(req, res, next) => {
     const { id, isEnabled: orderStatus } = req.body;
 
+    console.log("Update Order Status: ", id, orderStatus);
+
     const updatedAdmin = await Admin.findOneAndUpdate(
-        { userId: "EYWbhGJsw2VranumeCuzcK8TOPE2" },
+        { userId: id },
         { orderStatus },
         { new: true, upsert: true }
     );

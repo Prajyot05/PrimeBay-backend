@@ -10,7 +10,7 @@ app.get("/pie", adminOnly, getPieChart);
 app.get("/bar", adminOnly, getBarChart);
 app.get("/line", adminOnly, getLineChart);
 
-app.get("/orderStatus", getOrderStatus);
+app.get("/orderStatus", getOrderStatus); 
 app.patch("/orderStatus", adminOnly, updateOrderStatus);
 
 export default app;

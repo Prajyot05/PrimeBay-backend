@@ -89,9 +89,8 @@ app.use("/uploads", express.static("uploads")); // Whenever I go to /uploads/any
 app.use(errorMiddleware);
 
 let globalOrderStatus = true;
-const userId = "EYWbhGJsw2VranumeCuzcK8TOPE2";
 
-const fetchOrderStatusForUser = async (userId: string) => {
+const fetchOrderStatusForUser = async () => {
     try {
         // const orderStatusInfo = await getOrCreateOrderStatus(userId);
         // globalOrderStatus = orderStatusInfo.orderStatus;
@@ -115,7 +114,7 @@ const fetchOrderStatusForUser = async (userId: string) => {
 };
 
 io.on("connection", (socket) => {
-    fetchOrderStatusForUser(userId);
+    fetchOrderStatusForUser();
     console.log("New client connected");
 
     // Send the current order status to the newly connected client
