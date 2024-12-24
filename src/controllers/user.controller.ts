@@ -18,6 +18,11 @@ export const newUser = TryCatch(
         if(!_id || !name || !phone || !email || !photo || !gender || !dob){
             return next(new ErrorHandler("Please add all fields", 400));
         }
+
+        const phoneRegex = /^[0-9]{10}$/; // Only allows 10-digit phone numbers
+        if (!phoneRegex.test(phone)) {
+            return next(new ErrorHandler("Invalid phone number format", 400));
+        }
     
         user = await User.create({
             name, email, phone, photo, gender, _id, dob:new Date(dob)
