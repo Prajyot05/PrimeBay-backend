@@ -4,6 +4,7 @@ import validator from 'validator';
 interface IUser extends Document{
     _id: string;
     name: string;
+    phone: string;
     photo: string;
     email: string;
     role: "admin" | "user";
@@ -28,6 +29,10 @@ const schema = new mongoose.Schema({
         required: [true, "Please enter Email"],
         unique: [true, "Email already exists"],
         validate: validator.default.isEmail
+    },
+    phone: {
+        type: String,
+        required: [true, "Please enter Phone Number"]
     },
     photo: {
         type: String,
