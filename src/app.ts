@@ -27,6 +27,8 @@ const port = process.env.PORT || 3000;
 const mongoURI = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
 const clientURL = process.env.CLIENT_URL || "";
+const webURL = process.env.WEB_URL || "";
+const appURL = process.env.APP_URL || "";
 
 connectDB(mongoURI);
 
@@ -51,12 +53,27 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(morgan("dev"));
 
+// app.use(
+//     cors({
+//     origin: [clientURL],
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+//     credentials: true
+// }));
+const allowedOrigins = [clientURL, webURL, appURL];
+
 app.use(
     cors({
-    origin: [clientURL],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    credentials: true
-}));
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+        credentials: true,
+    })
+);
 
 app.get("/", (req, res) => {
     res.send("API is Working with /api/v1");
@@ -104,7 +121,7 @@ const fetchOrderStatusForUser = async () => {
         const orderStatusInfo4 = await getOrCreateOrderStatus(tempId4);
 
         const finalValue = orderStatusInfo1.orderStatus && orderStatusInfo2.orderStatus && orderStatusInfo3.orderStatus && orderStatusInfo4.orderStatus;
-        console.log("Initial Value: ", finalValue);
+        // console.log("Initial Value: ", finalValue);
         
         globalOrderStatus = finalValue;
     } catch (error) {
@@ -115,11 +132,11 @@ const fetchOrderStatusForUser = async () => {
 
 io.on("connection", (socket) => {
     fetchOrderStatusForUser();
-    console.log("New client connected");
+    // console.log("New client connected");
 
     // Send the current order status to the newly connected client
     socket.emit("orderStatusUpdate", globalOrderStatus);
-    console.log('ORDER STATUS: ', globalOrderStatus);
+    // console.log('ORDER STATUS: ', globalOrderStatus);
 
     // Listen for admin updates to order status
     socket.on("updateOrderStatus", (newStatus) => {
@@ -130,7 +147,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
-        console.log("Client disconnected");
+        // console.log("Client disconnected");
     });
 });
 

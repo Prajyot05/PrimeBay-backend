@@ -10,5 +10,9 @@ app.get("/my", myOrders);
 app.get("/all", adminOnly, allOrders);
 app.route("/:id").get(getSingleOrder).put(adminOnly, processOrder).delete(adminOnly, deleteOrder);
 
+// For App
+app.get("/app/all", allOrders);
+app.route("/app/:id").get(getSingleOrder).put(processOrder).delete(deleteOrder);
+
 
 export default app;

@@ -376,7 +376,7 @@ export const getOrderStatus = TryCatch(async(req, res, next) => {
     const orderStatusInfo4 = await getOrCreateOrderStatus(tempId4);
 
     const finalValue = orderStatusInfo1.orderStatus && orderStatusInfo2.orderStatus && orderStatusInfo3.orderStatus && orderStatusInfo4.orderStatus;
-    console.log("Final Value: ", finalValue);
+    // console.log("Final Value: ", finalValue);
 
     res.status(200).json({
         success: true,
@@ -387,7 +387,7 @@ export const getOrderStatus = TryCatch(async(req, res, next) => {
 export const updateOrderStatus = TryCatch(async(req, res, next) => {
     const { id, isEnabled: orderStatus } = req.body;
 
-    console.log("Update Order Status: ", id, orderStatus);
+    // console.log("Update Order Status: ", id, orderStatus);
 
     const updatedAdmin = await Admin.findOneAndUpdate(
         { userId: id },
@@ -399,7 +399,7 @@ export const updateOrderStatus = TryCatch(async(req, res, next) => {
     if (req.io){
         req.io.emit("orderStatusUpdate", updatedAdmin.orderStatus);
     } else {
-        console.log("Socket.IO instance not attached to request.");
+        // console.log("Socket.IO instance not attached to request.");
     }
 
     res.status(200).json({

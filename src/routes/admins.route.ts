@@ -13,4 +13,13 @@ app.get("/line", adminOnly, getLineChart);
 app.get("/orderStatus", getOrderStatus); 
 app.patch("/orderStatus", adminOnly, updateOrderStatus);
 
+// For App
+app.get("/app/stats", getDashboardStats);
+app.get("/app/pie", getPieChart);
+app.get("/app/bar", getBarChart);
+app.get("/app/line", getLineChart);
+
+app.get("/app/orderStatus", getOrderStatus); 
+app.patch("/app/orderStatus", updateOrderStatus);
+
 export default app;
