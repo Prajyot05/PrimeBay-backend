@@ -16,4 +16,12 @@ app.route("/coupon/:id")
 app.post("/sessionId", getSessionId);
 app.post("/verify", verifyCashfreePayment);
 
+// For App
+app.get("/app/coupon/all", allCoupons);
+app.post("/app/coupon/new", newCoupon);
+app.route("/app/coupon/:id")
+    .get(getCoupon)
+    .put(updateCoupon)
+    .delete(deleteCoupon);
+
 export default app;

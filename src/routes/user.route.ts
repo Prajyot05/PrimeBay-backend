@@ -9,4 +9,8 @@ app.post("/new", newUser);
 app.get("/all", adminOnly, getAllUsers);
 app.route("/:id").get(getUser).delete(adminOnly, deleteUser);
 
+// For App
+app.get("/app/all", getAllUsers);
+app.route("/app/:id").get(getUser).delete(deleteUser);
+
 export default app;

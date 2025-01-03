@@ -59,6 +59,7 @@ app.use(morgan("dev"));
 //     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 //     credentials: true
 // }));
+
 const allowedOrigins = [clientURL, webURL, appURL];
 
 app.use(

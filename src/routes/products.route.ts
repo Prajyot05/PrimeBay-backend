@@ -5,7 +5,7 @@ import { multiUpload } from '../middlewares/multer.js';
 
 const app = express.Router();
 
-// Route: /api/v1/user/{nameOfRoute}
+// Route: /api/v1/product/{nameOfRoute}
 app.post("/new", adminOnly, multiUpload, newProduct);
 app.get("/latest", getLatestProducts);
 app.get("/all", getAllProducts);
@@ -19,5 +19,9 @@ app.route("/:id")
 app.get("/reviews/:id", allReviewsOfProduct);
 app.post("/review/new/:id", newReview);
 app.delete("/review/:id", deleteReview);
+
+// For App
+app.get("/app/admin-products", getAdminProducts);
+app.post("/app/new", multiUpload, newProduct);
 
 export default app;
