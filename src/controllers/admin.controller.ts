@@ -15,7 +15,38 @@ export const getDashboardStats = TryCatch(async(req, res, next) => {
     else{
         const today = new Date();
         const sixMonthsAgo = new Date();
+
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        const last24HoursStart = new Date();
+        // Set the start time of the daily window to today at 3 PM
+        last24HoursStart.setHours(15, 0, 0, 0);
+
+        // If the current time is before 3 PM today, move the start time to yesterday at 3 PM
+        if (today < last24HoursStart) {
+            last24HoursStart.setDate(last24HoursStart.getDate() - 1);
+        }
+
+        // Previous 24-hour window starts 24 hours before the current window
+        const prev24HoursStart = new Date(last24HoursStart);
+        prev24HoursStart.setDate(prev24HoursStart.getDate() - 1);
+
+        // End time for the previous 24-hour window
+        const prev24HoursEnd = new Date(last24HoursStart);
+
+        const last24HoursOrdersPromise = Order.find({
+            createdAt: {
+                $gte: last24HoursStart,
+                $lte: today
+            }
+        });
+
+        const prev24HoursOrdersPromise = Order.find({
+            createdAt: {
+                $gte: prev24HoursStart,
+                $lte: prev24HoursEnd
+            }
+        });        
 
         const thisMonth = {
             start: new Date(today.getFullYear(), today.getMonth(), 1),
@@ -87,6 +118,8 @@ export const getDashboardStats = TryCatch(async(req, res, next) => {
             usersCount,
             allOrders,
             lastSixMonthOrders,
+            last24HoursOrders,
+            prev24HoursOrders,
             categories,
             femaleUsersCount,
             latestTransactions
@@ -100,6 +133,8 @@ export const getDashboardStats = TryCatch(async(req, res, next) => {
                 User.countDocuments(),
                 Order.find({}).select("total"),
                 lastSixMonthOrdersPromise,
+                last24HoursOrdersPromise,
+                prev24HoursOrdersPromise,
                 Product.distinct("category"),
                 User.countDocuments({gender: "female"}),
                 latestTransactionsPromise
@@ -108,12 +143,20 @@ export const getDashboardStats = TryCatch(async(req, res, next) => {
         const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
 
         const lastMonthRevenue = lastMonthOrders.reduce((total, order) => total + (order.total || 0), 0);
+
+        const last24HoursOrdersCount = last24HoursOrders.length;
+        const last24HoursRevenue = last24HoursOrders.reduce((total, order) => total + (order.total || 0), 0);
+
+        const prev24HoursOrdersCount = prev24HoursOrders.length;
+        const prev24HoursRevenue = prev24HoursOrders.reduce((total, order) => total + (order.total || 0), 0);
         
         let changePercent = {
             revenue: calculatePercentage(thisMonthRevenue, lastMonthRevenue),
             product: calculatePercentage(thisMonthProducts.length, lastMonthProducts.length),
             user: calculatePercentage(thisMonthUsers.length, lastMonthUsers.length),
-            order: calculatePercentage(thisMonthOrders.length, lastMonthOrders.length)
+            order: calculatePercentage(thisMonthOrders.length, lastMonthOrders.length),
+            dailyTransactions: calculatePercentage(last24HoursOrdersCount, prev24HoursOrdersCount),
+            dailyRevenue: calculatePercentage(last24HoursRevenue, prev24HoursRevenue)
         }
 
         const revenue = allOrders.reduce((total, order) => total + (order.total || 0), 0);
@@ -122,7 +165,9 @@ export const getDashboardStats = TryCatch(async(req, res, next) => {
             revenue,
             user: usersCount,
             product: productsCount,
-            order: allOrders.length
+            order: allOrders.length,
+            dailyOrders: last24HoursOrdersCount,
+            dailyRevenue: last24HoursRevenue
         };
 
         const orderMonthCounts = getCharData({length: 6, today, docArr: lastSixMonthOrders});
