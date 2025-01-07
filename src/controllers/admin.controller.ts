@@ -411,45 +411,43 @@ export const getLineChart = TryCatch(async(req, res, next) => {
 });
 
 export const getOrderStatus = TryCatch(async(req, res, next) => {
-    const tempId1 = "EYWbhGJsw2VranumeCuzcK8TOPE2";
-    const orderStatusInfo1 = await getOrCreateOrderStatus(tempId1);
-    const tempId2 = "KchqAhyr72bJNEPXSuRUWhsOgR22";
-    const orderStatusInfo2 = await getOrCreateOrderStatus(tempId2);
-    const tempId3 = "Pd6zWGkSjLTh8IpOobO35dbA2IJ2";
-    const orderStatusInfo3 = await getOrCreateOrderStatus(tempId3);
-    const tempId4 = "Fs7NfKSvp8XV6qhFLQ6WyjfOwLv1";
-    const orderStatusInfo4 = await getOrCreateOrderStatus(tempId4);
+    if(process.env.ADMIN_ID){
+        const orderStatus = await getOrCreateOrderStatus(process.env.ADMIN_ID);
 
-    const finalValue = orderStatusInfo1.orderStatus && orderStatusInfo2.orderStatus && orderStatusInfo3.orderStatus && orderStatusInfo4.orderStatus;
-    // console.log("Final Value: ", finalValue);
-
-    res.status(200).json({
-        success: true,
-        orderStatusInfo: finalValue
-    });
+        res.status(200).json({
+            success: true,
+            orderStatusInfo: orderStatus.orderStatus
+        });
+    }
+    else{
+        console.log("Admin ID not found!");
+    }
 });
 
 export const updateOrderStatus = TryCatch(async(req, res, next) => {
-    const { id, isEnabled: orderStatus } = req.body;
+    if(process.env.ADMIN_ID){
+        const { isEnabled: orderStatus } = req.body;
+        console.log('ORDER STATUS: ', orderStatus)
 
-    // console.log("Update Order Status: ", id, orderStatus);
+        // console.log("Update Order Status: ", id, orderStatus);
 
-    const updatedAdmin = await Admin.findOneAndUpdate(
-        { userId: id },
-        { orderStatus },
-        { new: true, upsert: true }
-    );
+        const updatedAdmin = await Admin.findOneAndUpdate(
+            { userId: process.env.ADMIN_ID },
+            { orderStatus },
+            { new: true, upsert: true }
+        );
 
-    // Emit the updated order status to all connected clients
-    if (req.io){
-        req.io.emit("orderStatusUpdate", updatedAdmin.orderStatus);
-    } else {
-        // console.log("Socket.IO instance not attached to request.");
+        // Emit the updated order status to all connected clients
+        if (req.io){
+            req.io.emit("orderStatusUpdate", updatedAdmin.orderStatus);
+        } else {
+            // console.log("Socket.IO instance not attached to request.");
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Order status updated",
+            orderStatus: updatedAdmin.orderStatus
+        });
     }
-
-    res.status(200).json({
-        success: true,
-        message: "Order status updated",
-        orderStatus: updatedAdmin.orderStatus
-    });
 });
