@@ -23,5 +23,9 @@ app.delete("/review/:id", deleteReview);
 // For App
 app.get("/app/admin-products", getAdminProducts);
 app.post("/app/new", multiUpload, newProduct);
+app.route("/app/:id")
+    .get(getSingleProduct)
+    .put(multiUpload, updateProduct)
+    .delete(deleteProduct);
 
 export default app;
