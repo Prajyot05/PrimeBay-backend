@@ -18,12 +18,19 @@ export const getDashboardStats = TryCatch(async(req, res, next) => {
 
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-        const last24HoursStart = new Date();
+        // Function to convert a date to IST and set specific hours
+        const toIST = (date: Date) => {
+            const istOffset = 330; // IST is UTC+5:30
+            const offsetDate = new Date(date.getTime() + istOffset * 60 * 1000);
+            return offsetDate;
+        };
+
         // Set the start time of the daily window to today at 3 PM
+        const last24HoursStart = toIST(new Date());
         last24HoursStart.setHours(15, 0, 0, 0);
 
         // If the current time is before 3 PM today, move the start time to yesterday at 3 PM
-        if (today < last24HoursStart) {
+        if (today.getTime() < last24HoursStart.getTime() - 330 * 60 * 1000) {
             last24HoursStart.setDate(last24HoursStart.getDate() - 1);
         }
 
