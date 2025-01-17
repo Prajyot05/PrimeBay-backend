@@ -34,6 +34,12 @@ const schema = new mongoose.Schema({
         required: [true, "Please enter User ID"]
     },
 
+    orderType: {
+        type: String,
+        enum : ['COD','PREPAID'],
+        default: 'PREPAID'
+    },
+
     subTotal: {
         type: Number,
         required: [true, "Please enter Sub Total"]

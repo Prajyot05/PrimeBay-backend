@@ -62,7 +62,7 @@ export const getSingleOrder = TryCatch(async(req, res, next) => {
 });
 
 export const newOrder = TryCatch(async(req:Request<{}, {}, NewOrderRequestBody>, res, next) => {
-    const {shippingInfo, orderItems, user, subTotal, tax, shippingCharges, discount, total} = req.body
+    const {shippingInfo, orderItems, user, subTotal, tax, shippingCharges, discount, total, orderType} = req.body
 
     // console.log("REQ BODY IN NEW ORDER: ", req.body);
 
@@ -73,7 +73,8 @@ export const newOrder = TryCatch(async(req:Request<{}, {}, NewOrderRequestBody>,
     const order = await Order.create({
         shippingInfo, 
         orderItems, 
-        user, 
+        user,
+        orderType,
         subTotal, 
         tax, 
         shippingCharges, 
