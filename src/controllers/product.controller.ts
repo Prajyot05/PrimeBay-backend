@@ -4,13 +4,14 @@ import { Product } from "../models/product.model.js";
 import { BaseQuery, NewProductRequestBody, SearchRequestQuery } from "../types/types.js";
 import ErrorHandler from "../utils/utility-class.js";
 import { myCache } from "../app.js";
-import { deleteFromCloudinary, findAverageRatings, invalidateCache, uploadToCloudinary } from "../utils/features.js";
+import { findAverageRatings, invalidateCache } from "../utils/features.js";
 import { Types } from "mongoose";
 import { User } from "../models/user.model.js";
 import { Review } from "../models/review.model.js";
+import {unlinkSync, existsSync} from 'fs';
+import path from "path";
 
 export const getLatestProducts = TryCatch(async (req, res, next) => {
-
     let products;
 
     if(myCache.has("latest-product")) products = JSON.parse(myCache.get("latest-product") as string);
@@ -61,7 +62,7 @@ export const getAdminProducts = TryCatch(async (req, res, next) => {
 });
 
 export const getSingleProduct = TryCatch(async (req, res, next) => {
-
+    console.log('CHAL RAHA HAI?')
     let product;
     const id = req.params.id;
 
@@ -119,6 +120,7 @@ export const getAllProducts = TryCatch(async (req:Request<{}, {}, {}, SearchRequ
 
 export const newProduct = TryCatch(async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
     const {name, category, stock, price, description} = req.body;
+    console.log('REQUEST BODY: ', req.body);
     const photos = req.files as Express.Multer.File[] | undefined;
 
     if(!photos) return next(new ErrorHandler("Please add Photos", 400));
@@ -128,13 +130,13 @@ export const newProduct = TryCatch(async (req: Request<{}, {}, NewProductRequest
     if(photos.length > 5) return next(new ErrorHandler("You can only add upto 5 Photos", 400));
 
     if(!name || !category || !stock || !price || !description){
-        // rm(photo.path, () => {
-        //     console.log("Deleted");
-        // })
+        photos.forEach(photo => unlinkSync(photo.path));
         return next(new ErrorHandler("Please enter all fields", 400));
     }
 
-    const photosURL = await uploadToCloudinary(photos);
+    // const photosURL = await uploadToCloudinary(photos);
+    const photosURL = photos.map(photo => `/uploads/${photo.filename}`);
+    console.log("CREATED PHOTOS URL: ", photosURL);
 
     await Product.create({
         name,
@@ -164,9 +166,21 @@ export const updateProduct = TryCatch(async (req, res, next) => {
     if(!product) return next(new ErrorHandler("Product not found", 404));
 
     if(photos && photos.length > 0){
-        const photosURL = await uploadToCloudinary(photos);  
-        const ids = product.photos.map((photo) => photo.public_id);   
-        await deleteFromCloudinary(ids);   
+        // const photosURL = await uploadToCloudinary(photos);  
+        // Remove old photos from the server
+        product.photos.forEach(photoPath => {
+            const fullPath = path.join(__dirname, `../../${photoPath}`);
+            if (existsSync(fullPath)) {
+                unlinkSync(fullPath);
+            }
+        });
+
+        // const ids = product.photos.map((photo) => photo.public_id);   
+        // await deleteFromCloudinary(ids);   
+
+        // Save new photos and update the database
+        const photosURL = photos.map(photo => `/uploads/${photo.filename}`);
+        console.log('UPDATED PHOTOS URL: ', photosURL)
 
         product.photos = photosURL as unknown as Types.DocumentArray<{ public_id: string; url: string }>;
         // product.photos = photosURL;
@@ -193,15 +207,20 @@ export const updateProduct = TryCatch(async (req, res, next) => {
 export const deleteProduct = TryCatch(async (req, res, next) => {
     
     const product = await Product.findById(req.params.id);
-
     if(!product) return next(new ErrorHandler("Product not found", 404));
 
     // rm(product.photo!, () => {
     //     console.log("Product photo deleted");
     // });  
+    product.photos.forEach(photoPath => {
+        const fullPath = path.join(__dirname, `../../${photoPath}`);
+        if (existsSync(fullPath)) {
+            unlinkSync(fullPath);
+        }
+    });
 
-    const ids = product.photos.map((photo) => photo.public_id);
-    await deleteFromCloudinary(ids);
+    // const ids = product.photos.map((photo) => photo.public_id);
+    // await deleteFromCloudinary(ids);
 
     await product.deleteOne();
 
