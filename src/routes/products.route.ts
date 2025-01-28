@@ -11,10 +11,10 @@ app.get("/latest", getLatestProducts);
 app.get("/all", getAllProducts);
 app.get("/categories", getAllCategories);
 app.get("/admin-products", adminOnly, getAdminProducts);
-// app.route("/:id")
-//     .get(getSingleProduct)
-//     .put(adminOnly, multiUpload, updateProduct)
-//     .delete(adminOnly, deleteProduct);
+app.route("/:id")
+    .get(getSingleProduct)
+    .put(adminOnly, multiUpload, updateProduct)
+    .delete(adminOnly, deleteProduct);
 
 app.get("/reviews/:id", allReviewsOfProduct);
 app.post("/review/new/:id", newReview);
