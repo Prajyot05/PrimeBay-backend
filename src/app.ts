@@ -1,26 +1,28 @@
-import express from 'express';
-import { connectDB, getOrCreateOrderStatus } from './utils/features.js';
-import { errorMiddleware } from './middlewares/error.js';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import NodeCache from 'node-cache';
-import {config} from 'dotenv';
-import morgan from 'morgan';
-import Stripe from 'stripe';
-import cors from 'cors';
-import {v2 as cloudinary} from 'cloudinary';
-import {Cashfree} from 'cashfree-pg';
+import express from "express";
+import { connectDB, getOrCreateOrderStatus } from "./utils/features.js";
+import { errorMiddleware } from "./middlewares/error.js";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import NodeCache from "node-cache";
+import { config } from "dotenv";
+import morgan from "morgan";
+import Stripe from "stripe";
+import cors from "cors";
+import { v2 as cloudinary } from "cloudinary";
+import { Cashfree } from "cashfree-pg";
 
 // Importing Routes
-import userRoute from './routes/user.route.js';
-import productRoute from './routes/products.route.js';
-import orderRoute from './routes/orders.route.js';
-import paymentRoute from './routes/payment.route.js';
-import adminRoute from './routes/admins.route.js';
+import userRoute from "./routes/user.route.js";
+import productRoute from "./routes/products.route.js";
+import orderRoute from "./routes/orders.route.js";
+import paymentRoute from "./routes/payment.route.js";
+import adminRoute from "./routes/admins.route.js";
+import { createRouteHandler } from "uploadthing/express";
+import { uploadRouter } from "./uploadthing.js";
 
 config({
-    path: "./.env"
-})
+  path: "./.env",
+});
 
 // Basic variables confid
 const port = process.env.PORT || 3000;
@@ -34,9 +36,9 @@ connectDB(mongoURI);
 
 // Cloudinary config
 cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.CLOUD_API_KEY,
-    api_secret: process.env.CLOUD_API_SECRET,
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
 });
 
 // Cashfree config
@@ -50,7 +52,7 @@ export const myCache = new NodeCache();
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 // app.use(
@@ -63,37 +65,37 @@ app.use(morgan("dev"));
 const allowedOrigins = [clientURL, webURL, appURL];
 
 app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, true);
-            } else {
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-        credentials: true,
-    })
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+  })
 );
 
 app.get("/", (req, res) => {
-    res.send("API is Working with /api/v1");
-})
+  res.send("API is Working with /api/v1");
+});
 
 // Create HTTP server for Express and Socket.IO
 const server = createServer(app);
 
 // Initialize Socket.IO
 const io = new Server(server, {
-    cors: {
-        origin: clientURL,
-        methods: ["GET", "PATCH"]
-    }
+  cors: {
+    origin: clientURL,
+    methods: ["GET", "PATCH"],
+  },
 });
 
 app.use((req, res, next) => {
-    req.io = io;
-    next();
+  req.io = io;
+  next();
 });
 
 // Using Routes
@@ -103,44 +105,54 @@ app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", paymentRoute);
 app.use("/api/v1/dashboard", adminRoute);
 
+app.use(
+  "/api/v1/uploadthing",
+  createRouteHandler({
+    router: uploadRouter,
+    //   config: { ... },
+  })
+);
+
 app.use("/uploads", express.static("uploads")); // Whenever I go to /uploads/anything route, it opens image from 'uploads' folder
 app.use(errorMiddleware);
 
 let globalOrderStatus = true;
 
 const fetchOrderStatusForUser = async () => {
-    try {
-        if(process.env.ADMIN_ID){
-            const orderStatusInfo = await getOrCreateOrderStatus(process.env.ADMIN_ID);   
-            globalOrderStatus = orderStatusInfo.orderStatus;
-        }
-    } catch (error) {
-        console.error("Error fetching initial store status:", error);
-        return null;
+  try {
+    if (process.env.ADMIN_ID) {
+      const orderStatusInfo = await getOrCreateOrderStatus(
+        process.env.ADMIN_ID
+      );
+      globalOrderStatus = orderStatusInfo.orderStatus;
     }
+  } catch (error) {
+    console.error("Error fetching initial store status:", error);
+    return null;
+  }
 };
 
 io.on("connection", (socket) => {
-    fetchOrderStatusForUser();
-    // console.log("New client connected");
+  fetchOrderStatusForUser();
+  // console.log("New client connected");
 
-    // Send the current order status to the newly connected client
-    socket.emit("orderStatusUpdate", globalOrderStatus);
-    // console.log('ORDER STATUS: ', globalOrderStatus);
+  // Send the current order status to the newly connected client
+  socket.emit("orderStatusUpdate", globalOrderStatus);
+  // console.log('ORDER STATUS: ', globalOrderStatus);
 
-    // Listen for admin updates to order status
-    socket.on("updateOrderStatus", (newStatus) => {
-        globalOrderStatus = newStatus;
+  // Listen for admin updates to order status
+  socket.on("updateOrderStatus", (newStatus) => {
+    globalOrderStatus = newStatus;
 
-        // Broadcast the new status to all connected clients
-        io.emit("orderStatusUpdate", globalOrderStatus);
-    });
+    // Broadcast the new status to all connected clients
+    io.emit("orderStatusUpdate", globalOrderStatus);
+  });
 
-    socket.on("disconnect", () => {
-        // console.log("Client disconnected");
-    });
+  socket.on("disconnect", () => {
+    // console.log("Client disconnected");
+  });
 });
 
 server.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
